@@ -32,9 +32,11 @@ function Board(){
 
     const markCell = function(r, c, player){
         const availableCell = board[r][c].getValue() === "0";
-        if(!availableCell) return;
+        if(!availableCell) return 0;
 
         board[r][c].setValue(player);
+
+        return 1;
     }
 
     const printBoard = () => {
@@ -47,4 +49,59 @@ function Board(){
         markCell,
         printBoard
     }
+}
+
+function GameController(
+    playerOneName = "Player One",
+    playerTwoName = "Player Two"
+){
+    const board = Board();
+
+    const players = [
+    {
+      name: playerOneName,
+      symbol: "X"
+    },
+    {
+      name: playerTwoName,
+      symbol: "O"
+    }
+  ];
+
+  let activePlayer = players[0];
+
+  const switchActivePlayer = function(){
+    activePlayer = activePlayer === players[0] ? players[1] : players[0];
+  }
+
+  const getActivePlayer = () => activePlayer;
+
+  const printNewRound = () => {
+    board.printBoard();
+    console.log(`${getActivePlayer().name}'s turn.`);
+  };
+
+  const playRound = function(row, column){
+    let invalid = board.markCell(row, column, getActivePlayer().symbol);
+    while(!invalid){
+
+        console.log(`Not a Valid Cell`);
+        printNewRound();
+        if(board.markCell(row, column, getActivePlayer().symbol)){
+            break;
+        }
+    }
+
+    // Game winning logic
+
+    switchActivePlayer();
+    printNewRound();
+  }
+
+  printNewRound();
+
+  return {
+    playRound,
+    getActivePlayer
+  };
 }
