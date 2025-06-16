@@ -40,14 +40,50 @@ function Board(){
     }
 
     const printBoard = () => {
-        const boardValues = board.map((row) => row.map((cell) => cell.getValue()))
+        const boardValues = board.map((row) => row.map((cell) => cell.getValue()));
         console.log(boardValues);
+    };
+
+    const blankCells = () => board.reduce((count, row) => {
+        return count + row.filter(cell => cell.getValue() === "0").length;
+      }, 0);
+
+    const checkWinner = () => {
+      const values = board.map(row => row.map(cell => cell.getValue()));
+
+      // Check rows
+      for (let r = 0; r < 3; r++) {
+        if (values[r][0] !== "0" && values[r][0] === values[r][1] && values[r][1] === values[r][2]) {
+          return values[r][0];
+        }
+      }
+
+      // Check columns
+      for (let c = 0; c < 3; c++) {
+        if (values[0][c] !== "0" && values[0][c] === values[1][c] && values[1][c] === values[2][c]) {
+          return values[0][c];
+        }
+      }
+
+      // Check diagonals
+      if (values[0][0] !== "0" && values[0][0] === values[1][1] && values[1][1] === values[2][2]) {
+        return values[0][0];
+      }
+
+      if (values[0][2] !== "0" && values[0][2] === values[1][1] && values[1][1] === values[2][0]) {
+        return values[0][2];
+      }
+
+      // No winner
+      return null;
     };
 
     return {
         getBoard,
         markCell,
-        printBoard
+        printBoard,
+        blankCells,
+        checkWinner
     }
 }
 
@@ -81,6 +117,10 @@ function GameController(
     console.log(`${getActivePlayer().name}'s turn.`);
   };
 
+  const drawGame = () => {
+    return board.blankCells() > 0 ? false : true;
+  };
+
   const playRound = function(row, column){
     let invalid = board.markCell(row, column, getActivePlayer().symbol);
     while(!invalid){
@@ -92,7 +132,17 @@ function GameController(
         }
     }
 
+    if (board.checkWinner()) {
+      console.log(`${getActivePlayer().name} wins!`);
+      board.printBoard();
+      return;
+    }
+
     // Game winning logic
+    if(drawGame()){
+      console.log(`DRAW GAME`);
+      return;
+    }
 
     switchActivePlayer();
     printNewRound();
