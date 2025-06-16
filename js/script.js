@@ -123,35 +123,86 @@ function GameController(
 
   const playRound = function(row, column){
     let invalid = board.markCell(row, column, getActivePlayer().symbol);
-    while(!invalid){
-
-        console.log(`Not a Valid Cell`);
-        printNewRound();
-        if(board.markCell(row, column, getActivePlayer().symbol)){
-            break;
-        }
+    if (!invalid) {
+      console.log("Invalid move! Cell is already taken.");
+      return;
     }
 
     if (board.checkWinner()) {
       console.log(`${getActivePlayer().name} wins!`);
       board.printBoard();
-      return;
+      return 1;
     }
 
     // Game winning logic
     if(drawGame()){
       console.log(`DRAW GAME`);
-      return;
+      return 2;
     }
 
     switchActivePlayer();
-    printNewRound();
   }
-
-  printNewRound();
 
   return {
     playRound,
-    getActivePlayer
+    getActivePlayer,
+    getBoard: board.getBoard()
   };
 }
+
+function ScreenController(){
+  const game = GameController();
+  const playerTurnDiv = document.querySelector('.turn');
+  const boardDiv = document.querySelector('.board');
+  let gameOver = false;
+  
+  const disableAllButtons = () => {
+    const allCells = document.querySelectorAll(".cell");
+    allCells.forEach(btn => btn.disabled = true);
+  };
+
+  const updateScreen = () =>{
+
+    const board = game.getBoard;
+    const activePlayer = game.getActivePlayer();
+
+    playerTurnDiv.textContent = activePlayer.name + "'s Turn";
+    boardDiv.textContent = "";
+    board.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+
+        const cellButton = document.createElement("button");
+        cellButton.classList.add("cell");
+
+        // This makes it easier to pass into our `playRound` function 
+        cellButton.textContent = cell.getValue() === "0" ? "" : cell.getValue();
+        cellButton.classList.add(cell.getValue());
+
+        // Store the row and column as data attributes
+        cellButton.dataset.row = rowIndex;
+        cellButton.dataset.col = colIndex;
+
+        cellButton.addEventListener("click", () => {
+          if (gameOver || cell.getValue() !== "0") return;
+          const result = game.playRound(rowIndex, colIndex);
+          updateScreen(); // Re-render the board
+          if(result === 1){
+            playerTurnDiv.textContent = activePlayer.name + " Won";
+            disableAllButtons();
+            return;
+          }else if(result === 2){
+            playerTurnDiv.textContent = "Draw Game";
+            disableAllButtons();
+            return;
+          };
+        });
+
+        boardDiv.appendChild(cellButton);
+      })
+    })
+  };
+
+  updateScreen();
+}
+
+ScreenController();
